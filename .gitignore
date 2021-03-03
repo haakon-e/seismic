@@ -18,3 +18,4 @@ docs/site/
 deps/deps.jl
 Manifest.toml
 *.vscode*
+*.ipynb_checkpoints*
