@@ -1,11 +1,10 @@
 module Grids
-#using LinearAlgebra
-#using Distributions
-#using Plots
-#using Statistics
 
+export Point, mean_point, distance
+export AbstractGrid, Grid, makeGrid
+export bounding_box
+export grid_neighbors
 
-export Point, mean_point
 """
 A `Point` is a pair of coordinates (x,y).
 """
@@ -14,11 +13,10 @@ struct Point{T<:Real}
     y::T
 end
 
-# Basic operations on pairs of points: Compute the length between them and their midpoint.
-Base.length(p::Point, q::Point) = sqrt((p.x-q.x)^2 + (p.y-q.y)^2)
+# Basic operations on pairs of points: Compute the distance between them and their midpoint.
+distance(p::Point, q::Point) = sqrt((p.x-q.x)^2 + (p.y-q.y)^2)
 mean_point(p::Point, q::Point) = Point((p.x+q.x)/2, (p.y+q.y)/2);
 
-export AbstractGrid, Grid, makeGrid
 
 abstract type AbstractGrid end
 
@@ -56,7 +54,7 @@ function makeGrid(nx::I, ny::I, Δx::F, Δy::F) where {I<:Integer, F<:Real}
     #new(nodes,centers,Δx,Δy,xticks,yticks,nx,ny)
 end
 
-export bounding_box
+
 """
 Compute the grid bounding box.
 Returns the minimum and maximum x- and y-coordinates of the grid.
@@ -67,7 +65,7 @@ function bounding_box(grid::Grid)
     return [xmin, ymin, xmax, ymax]
 end
 
-export grid_neighbors
+
 """"
 Returns a matrix where a non-zero value implies that the row (cell) and column (other cell) are neighbors.
 """

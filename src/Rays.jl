@@ -1,7 +1,6 @@
 module Rays
 
-include("./Grids.jl")
-using .Grids
+using ..Grids
 
 export decompose_ray
 """
@@ -43,7 +42,7 @@ function decompose_ray(
 
     # Sort intersection points by distance to source
     # (first point closest to source, last point closest to receiver)
-    sort!(pts, by=(p->length(p, src)))
+    sort!(pts, by=(p->distance(p, src)))
 
     # Add `src` to the end of the point list
     push!(pts, rec)
@@ -52,7 +51,7 @@ function decompose_ray(
     lengths = T[]
     centers = Point{T}[]
     for i in 2:length(pts)
-        push!(lengths, length(pts[i-1], pts[i]))
+        push!(lengths, distance(pts[i-1], pts[i]))
         push!(centers, mean_point(pts[i-1], pts[i]))
     end
 
@@ -75,7 +74,6 @@ end
 
 # Design matrix
 export distanceMatrix
-ν
 """
 Construct matrix which describes the distance that each float (rows)
 passes through the grid boxes (columns).
