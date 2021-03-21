@@ -34,6 +34,9 @@ function decompose_ray(
         push!(pts,Point(x,y))
     end
 
+    # Add source to `pts`. If it is outside the domain, `filter` (below) will remove it again.
+    push!(pts, src)
+
     # Remove any points not within the domain
     filter!(pt -> (
             minimum(grid.xticks) <= pt.x <= maximum(grid.xticks)) && (
@@ -44,7 +47,7 @@ function decompose_ray(
     # (first point closest to source, last point closest to receiver)
     sort!(pts, by=(p->distance(p, src)))
 
-    # Add `src` to the end of the point list
+    # Add `rec` to the end of the point list
     push!(pts, rec)
 
     # Compute lengths and center points of segments
