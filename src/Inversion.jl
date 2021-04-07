@@ -47,18 +47,27 @@ function Rxx(grid::AbstractGrid, σ::T, λ::T) where T <: Real
 end
 
 """
-    Rnn(A::AbstractMatrix, σ::Real)
+    Rnn(A::AbstractMatrix, σ::Real, σ_indp::Real)
 
-Compute the prior covariance of the data given correlation level σ.
+Compute the prior covariance of the data given correlation level σ and
+independent noise σ_indp, with A being a slowness measure and noise
+transformation.
 
-Typically, this is the position uncertainty of the floats.
-The correlation level σ is typically expressed as
-`pos. uncertainty` / `wave speed` = `travel time uncertainty` 
+Typically, σ is the position uncertainty of the floats.
+The correlation level Rnn is typically expressed as
+`pos. uncertainty (σ)` * `wave slowness (A)` = `travel time uncertainty (Rnn)`
+The independent noise σ_indp represents noise in waveform correlation or
+independent noise travel-time measurements.
+Typically, the matrix A is the product of the slowness `s` and a mapping
+from receivers to receiver pairs (see also the method `receiverPairs`).
 Units:
-	- σ [time]
+	- σ [length]
+    - σ_indp [time]
+    - A [time / length]
+    - Rnn [time^2]
 """
-function Rnn(A::AbstractMatrix, σ::Real)
-    σ^2 * A * A'
+function Rnn(A::AbstractMatrix, σ::Real, σ_indp::Real)
+    A * (σ^2*I) * A' + σ_indp^2 * I
 end
 
 """
@@ -72,7 +81,7 @@ function Ryy(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
 end
 
 """
-    uncertaintyMatrix(E::T, rxx::T, rnn::T) <: AbstractMatrix
+    uncertaintyMatrix(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
 
 Compute the uncertainty matrix for the linear relation
 	y = Ex + n,
