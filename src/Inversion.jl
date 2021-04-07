@@ -21,7 +21,7 @@ using LinearAlgebra
 
 # Export methods
 export Rxx, Ryy, Rnn 
-export computeUncertaintyMatrix, computeInversion
+export uncertaintyMatrix, computeInversion
 
 # Methods
 """
@@ -36,7 +36,7 @@ Units:
 	- λ [length]
 	- σ [time / length]
 """
-function Rxx(grid::Grid, σ::T, λ::T) where T<:Real
+function Rxx(grid::AbstractGrid, σ::T, λ::T) where T <: Real
     n = grid.nx*grid.ny; kernel = zeros(n,n)
     for (i, xi) in enumerate(grid.centers)
         for (j, xj) in enumerate(grid.centers)
@@ -47,49 +47,83 @@ function Rxx(grid::Grid, σ::T, λ::T) where T<:Real
 end
 
 """
-	Rnn(grid::Grid, σ::T) where T<:Real
+    Rnn(A::AbstractMatrix, σ::Real, σ_indp::Real)
 
-Compute the prior covariance of the data given correlation level σ.
+Compute the prior covariance of the data given correlation level σ and
+independent noise σ_indp, with A being a slowness measure and noise
+transformation.
 
-Typically, this is the position uncertainty of the floats.
-The correlation level σ is typically expressed as
-`pos. uncertainty` / `wave speed` = `travel time uncertainty` 
+Typically, σ is the position uncertainty of the floats.
+The correlation level Rnn is typically expressed as
+`pos. uncertainty (σ)` * `wave slowness (A)` = `travel time uncertainty (Rnn)`
+The independent noise σ_indp represents noise in waveform correlation or
+independent noise travel-time measurements.
+Typically, the matrix A is the product of the slowness `s` and a mapping
+from receivers to receiver pairs (see also the method `receiverPairs`).
 Units:
-	- σ [time]
+	- σ [length]
+    - σ_indp [time]
+    - A [time / length]
+    - Rnn [time^2]
 """
-function Rnn(grid::Grid, σ::T) where T<:Real
-    σ^2 * I
+function Rnn(A::AbstractMatrix, σ::Real, σ_indp::Real)
+    A * (σ^2*I) * A' + σ_indp^2 * I
 end
 
 """
-	Ryy(E, rxx, rnn)
+    Ryy(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
 
 Compute the prior covariance of the measurements y given
 Rnn, Rxx, and E.
 """
-function Ryy(E, rxx, rnn)
+function Ryy(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
     rnn + E * rxx * E'
 end
 
 """
-	computeUncertaintyMatrix(E, rxx, rnn)
+    uncertaintyMatrix(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
 
 Compute the uncertainty matrix for the linear relation
 	y = Ex + n,
 """
-function computeUncertaintyMatrix(E, rxx, rnn)
+function uncertaintyMatrix(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
     P = rxx - rxx * E' * inv(E * rxx * E' + rnn) * E * rxx
     return P
 end
 
 """
-	computeInversion(E, rxx, rnn, y)
+    computeInversion(E::T, rxx::T, rnn::T, y::AbstractArray) where T<:AbstractMatrix
 
 Compute the solution x̃ of the inverse problem.
 """
-function computeInversion(E, rxx, rnn, y)
+function computeInversion(E::T, rxx::T, rnn::T, y::AbstractArray) where T <: AbstractMatrix
 	rxx * E' * inv(E * rxx * E' + rnn) * y
 end
 
+#
+# Unused methods:
+#
+
+"""
+    noiseProjection(
+        receivers::Array{Point{T},1},
+        src::Point{T},
+    ) where T<:Real
+
+Compute the projection of the position noise onto the
+normalized x-y plane.
+"""
+function noiseProjection(
+        receivers::Array{Point{T},1},
+        src::Point{T},
+    ) where T <: Real
+    n_recs = length(receivers)
+    B = zeros((n_recs, 2*n_recs))
+    for (i, rec) in pairs(receivers)
+        θ = atan(rec.y - src.y, rec.x - src.x)
+        B[i, [2i-1, 2i]] = [cos(θ), sin(θ)]
+    end
+    B
+end
 
 end # module

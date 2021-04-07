@@ -1,6 +1,6 @@
 module Grids
 
-export Point, mean_point, distance
+export Point, mean_point, distance, ∠
 export AbstractGrid, Grid, makeGrid
 export bounding_box
 export grid_neighbors
@@ -13,9 +13,31 @@ struct Point{T<:Real}
     y::T
 end
 
-# Basic operations on pairs of points: Compute the distance between them and their midpoint.
+# Basic operations on pairs of points: 
 distance(p::Point, q::Point) = sqrt((p.x-q.x)^2 + (p.y-q.y)^2)
+distance(p::Point{T}) where T<:Number = distance(p, Point(T(0), T(0)))
 mean_point(p::Point, q::Point) = Point((p.x+q.x)/2, (p.y+q.y)/2);
+import Base: +, -, *, /
+(+)(A::Point, B::Point) = Point(A.x + B.x, A.y + B.y)
+(-)(A::Point, B::Point) = Point(A.x - B.x, A.y - B.y)
+(*)(A::Point, x::Number) = Point(A.x * x, A.y * x); (*)(x::Number, A::Point) = A * x
+(/)(A::Point, x::Number) = A * (1/x)
+import LinearAlgebra: dot
+dot(A::Point, B::Point) = A.x * B.x + A.y * B.y; (⋅)(A::Point, B::Point) = dot(A,B)
+
+"""
+    ∠(A, C, B)
+
+Find the angle ∠(ACB) between CA and CB in radians (default).
+"""
+function ∠(A::T, C::T, B::T; in_degrees=false) where T<:Point
+    CA = (A-C) / distance(A,C); CB = (B-C) / distance(B, C)
+    if in_degrees
+        return acosd(CA ⋅ CB)
+    else
+        return acos(CA ⋅ CB)
+    end
+end
 
 
 abstract type AbstractGrid end
