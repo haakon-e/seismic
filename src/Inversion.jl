@@ -30,11 +30,14 @@ export uncertaintyMatrix, computeInversion
 Compute the prior covariance of the physical variable x
 given correlation level σ and decorrelation scale λ.
 
-Typically, this is the spatial correlation between
-locations in the grid space.
+Typically σ is the prior solution variance at a given
+physical location, and the correlation between two
+locations is given by an exponential kernel over the
+prescribed decorrelation scale λ.
 Units:
 	- λ [length]
 	- σ [time / length]
+    - Rxx [(time / length)^2]
 """
 function Rxx(grid::AbstractGrid, σ::T, λ::T) where T <: Real
     n = grid.nx*grid.ny; kernel = zeros(n,n)
@@ -53,8 +56,8 @@ Compute the prior covariance of the data given correlation level σ and
 independent noise σ_indp, with A being a slowness measure and noise
 transformation.
 
-Typically, σ is the position uncertainty of the floats.
-The correlation level Rnn is typically expressed as
+Typically, σ [length] is the position uncertainty of the floats.
+The correlation level Rnn is then expressed as
 `pos. uncertainty (σ)` * `wave slowness (A)` = `travel time uncertainty (Rnn)`
 The independent noise σ_indp represents noise in waveform correlation or
 independent noise travel-time measurements.
@@ -71,32 +74,42 @@ function Rnn(A::AbstractMatrix, σ::Real, σ_indp::Real)
 end
 
 """
-    Ryy(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
+    Ryy(E::AbstractMatrix, rxx::AbstractMatrix, rnn::AbstractMatrix)
 
 Compute the prior covariance of the measurements y given
 Rnn, Rxx, and E.
 """
-function Ryy(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
+function Ryy(E::AbstractMatrix, rxx::AbstractMatrix, rnn::AbstractMatrix)
     rnn + E * rxx * E'
 end
 
 """
-    uncertaintyMatrix(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
+    uncertaintyMatrix(E::AbstractMatrix, rxx::AbstractMatrix, rnn::AbstractMatrix)
 
 Compute the uncertainty matrix for the linear relation
 	y = Ex + n,
 """
-function uncertaintyMatrix(E::T, rxx::T, rnn::T) where T <: AbstractMatrix
+function uncertaintyMatrix(E::AbstractMatrix, rxx::AbstractMatrix, rnn::AbstractMatrix)
     P = rxx - rxx * E' * inv(E * rxx * E' + rnn) * E * rxx
     return P
 end
 
 """
-    computeInversion(E::T, rxx::T, rnn::T, y::AbstractArray) where T<:AbstractMatrix
+    computeInversion(
+        E::AbstractMatrix, 
+        rxx::AbstractMatrix, 
+        rnn::AbstractMatrix, 
+        y::AbstractArray,
+    )
 
 Compute the solution x̃ of the inverse problem.
 """
-function computeInversion(E::T, rxx::T, rnn::T, y::AbstractArray) where T <: AbstractMatrix
+function computeInversion(
+        E::AbstractMatrix, 
+        rxx::AbstractMatrix, 
+        rnn::AbstractMatrix, 
+        y::AbstractArray,
+    )
 	rxx * E' * inv(E * rxx * E' + rnn) * y
 end
 

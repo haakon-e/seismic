@@ -152,17 +152,13 @@ function receiverPairs(
 end
 
 """
-    relativeDistanceMatrix(
-        M::T, D::T
-    ) where {T<:AbstractMatrix} 
+    relativeDistanceMatrix(M::AbstractMatrix, D::AbstractMatrix)
 
 Compute the relative distance matrix E = M * D, where 
 M is the receivers-pairs mapping given by `receiverPairs`, and
 D is the distance matrix given by `distanceMatrix`.
 """
-function relativeDistanceMatrix(
-        M::T, D::T
-    ) where {T<:AbstractMatrix} 
+function relativeDistanceMatrix(M::AbstractMatrix, D::AbstractMatrix)
     M*D 
 end
 
@@ -171,8 +167,8 @@ end
         receivers::Array{Point{T},1},
         src::Point{T},
         grid::Grid;
-        min_degrees = 10,
-        min_distance = 500e3
+        max_degrees = 10,
+        max_distance = 500e3
     ) where {T<:Real}
 
 Construct matrix which describes the relative distance that pairs
