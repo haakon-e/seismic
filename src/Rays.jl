@@ -12,7 +12,8 @@ export relativeDistanceMatrix
     decompose_ray(
         rec::Point{T},
         src::Point{T},
-        grid::G,
+        grid::G;
+        tol = 1e-9,
     ) where {T<:Real, G<:AbstractGrid}
 
 For each receiver, find the ray segments (and ids) through the cells.
@@ -24,7 +25,8 @@ indices given by `line_ind`, which refers to indices of `grid` cells.
 function decompose_ray(
         rec::Point{T},
         src::Point{T},
-        grid::AbstractGrid,
+        grid::AbstractGrid;
+        tol = 1e-9,
     ) where T<:Real
     # Find coordinates of interesection with grid
     xs = sort([src.x, rec.x])
@@ -69,8 +71,11 @@ function decompose_ray(
     lengths = T[]
     centers = Point{T}[]
     for i in 2:length(pts)
-        push!(lengths, distance(pts[i-1], pts[i]))
-        push!(centers, mean_point(pts[i-1], pts[i]))
+        dist = distance(pts[i-1], pts[i])
+        if dist > tol  # disregard segments shorter than a small tolerance.
+            push!(lengths, dist)
+            push!(centers, mean_point(pts[i-1], pts[i]))
+        end
     end
 
     # For each line, find which Grid cell it belongs to
@@ -145,24 +150,20 @@ function receiverPairs(
             m = zeros((1, n_recs))
             m[[i, j]] = [1, -1]
             M = [M; m]  # add to mapping
-            println("Added floats $i and $j.")
+            # println("Added floats $i and $j.")
         end
     end
     return M
 end
 
 """
-    relativeDistanceMatrix(
-        M::T, D::T
-    ) where {T<:AbstractMatrix} 
+    relativeDistanceMatrix(M::AbstractMatrix, D::AbstractMatrix)
 
 Compute the relative distance matrix E = M * D, where 
 M is the receivers-pairs mapping given by `receiverPairs`, and
 D is the distance matrix given by `distanceMatrix`.
 """
-function relativeDistanceMatrix(
-        M::T, D::T
-    ) where {T<:AbstractMatrix} 
+function relativeDistanceMatrix(M::AbstractMatrix, D::AbstractMatrix)
     M*D 
 end
 
@@ -171,8 +172,8 @@ end
         receivers::Array{Point{T},1},
         src::Point{T},
         grid::Grid;
-        min_degrees = 10,
-        min_distance = 500e3
+        max_degrees = 10,
+        max_distance = 500e3
     ) where {T<:Real}
 
 Construct matrix which describes the relative distance that pairs

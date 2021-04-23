@@ -13,25 +13,36 @@ Visualize the grid, sources, receivers, and ray paths.
 
 For debugging purposes.
 """
-function plot_grid_rays(grid::Grid{I,T}, src::Point{T}, recs::Array{Point{T},1}; heatmap_col=:tab20) where {I, T}
+function plot_grid_rays(
+        grid::Grid{I,T},
+        src::Point{T},
+        recs::Array{Point{T},1};
+        heatmap_col=:tab20,
+        show_float_label=true,
+        show_gridbox_label=true,
+    ) where {I, T}
     # Plot grid
     p = heatmap(
-        grid.xticks,# .- grid.Δx/2,
-        grid.yticks,#.- grid.Δy/2, 
-        reshape(1:grid.nx*grid.ny,(grid.nx,grid.ny)), 
+        grid.xticks,
+        grid.yticks,
+        reshape(1:grid.nx*grid.ny,(grid.ny,grid.nx)), 
         color=heatmap_col,
         cbar=false  # hide colorbar
     );
     
     # Annotate grid numbering
-    annts = [(pt.x, pt.y, text(i, 7, :white)) for (i, pt) in enumerate(grid.centers)];
-    annotate!(annts...);
+    if show_gridbox_label
+        annts = [(pt.x, pt.y, text(i, 7, :white)) for (i, pt) in enumerate(grid.centers)];
+        annotate!(annts...);
+    end
     
     # Display receivers (floats)
     rx = [r.x for r in recs]; ry = [r.y for r in recs]
     scatter!(rx,ry,label="floats");
-    floats_annot = [(pt.x, pt.y, text(i, 10, :bottom)) for (i, pt) in enumerate(recs)];
-    annotate!(floats_annot...);
+    if show_float_label
+        floats_annot = [(pt.x, pt.y, text(i, 10, :bottom)) for (i, pt) in enumerate(recs)];
+        annotate!(floats_annot...);
+    end
     
     # Display source
     scatter!([src.x],[src.y],label="source");
