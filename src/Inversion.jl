@@ -74,6 +74,18 @@ function Rnn(A::AbstractMatrix, σ::Real, σ_indp::Real)
 end
 
 """
+    Rnn(σ_indp::Real)
+
+Compute the prior data covariance assuming no correlation between data points.
+Units:
+    - σ_indp [time]
+    - Rnn [time^2]
+"""
+function Rnn(σ_indp::Real)
+    σ_indp^2 * I
+end
+
+"""
     Ryy(E::AbstractMatrix, rxx::AbstractMatrix, rnn::AbstractMatrix)
 
 Compute the prior covariance of the measurements y given
